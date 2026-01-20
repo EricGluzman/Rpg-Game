@@ -1,9 +1,7 @@
-# Ignore the folders where C# builds the game
+# git ignores this then u should too buddy.
 bin/
 obj/
 
-# Ignore VS Code settings
 .vscode/
 
-# Ignore the project user settings
 *.user
