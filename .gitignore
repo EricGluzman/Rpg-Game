@@ -1,0 +1,9 @@
+# Ignore the folders where C# builds the game
+bin/
+obj/
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore the project user settings
+*.user

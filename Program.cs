@@ -87,8 +87,8 @@ namespace MyRPG
             bool IsInFight = true;
             while (IsInFight)
             {   
-                int choice;
-                while (true)
+                int choice = 3;
+                while (true && preset.Health > 0)
                 {
                     Console.WriteLine("Choose Your Move: \n1.Attack. \n2.Evade \n3.Run The Fight ");
                     if(int.TryParse(Console.ReadLine(), out int temp))
@@ -118,7 +118,14 @@ namespace MyRPG
                         Console.WriteLine("Enter A Number Between The Range 1-3");
                         break;
                 }
-                MonsterAttack(p, preset);
+                if(preset.Health > 0 && choice != 3)
+                {
+                    MonsterAttack(p, preset);
+                }
+                else
+                {
+                    currentLevel++;
+                }
             }
         }
         static void Attack(Player p, Monster m)
@@ -129,6 +136,10 @@ namespace MyRPG
             Console.WriteLine($"{p.Name} Is Attacking And Hitting {damage} Points Of Damage.");
             m.Health -= damage;
             Console.WriteLine($"The Monster Have {m.Health} Left.");
+            if(m.Health <= 0)
+            {
+                Console.WriteLine($"Congratulations You Won {m.Name}!");
+            }
         }
 
         static void Evade(Player p)
