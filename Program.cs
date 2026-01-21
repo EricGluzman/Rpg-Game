@@ -90,7 +90,7 @@ namespace MyRPG
                 while (true && preset.Health > 0)
                 {
                     Console.WriteLine("Choose Your Move: \n1.Attack. \n2.Evade \n3.Run The Fight ");
-                    if(int.TryParse(Console.ReadLine(), out int temp))
+                    if(int.TryParse(Console.ReadLine(), out int temp) && temp >= 1 && temp <= 3)
                     {
                         choice = temp;
                         break;
@@ -121,9 +121,48 @@ namespace MyRPG
                 {
                     MonsterAttack(p, preset);
                 }
-                else
+                else if(preset.Health <= 0)
                 {
-                    currentLevel++;
+                    Console.WriteLine("Do You Want To: \n1. Continue To Fight Next Level Monster");
+                    Console.WriteLine("2. Continue To Fight The Same Level Monster");
+                    Console.WriteLine("3. Continue To Fight The Previous Level Monster ");
+                    Console.WriteLine("4. Go Back To Lobby");
+                    int User_Input = 3;
+                    while (true)
+                    {
+                        if(int.TryParse(Console.ReadLine(), out int temp))
+                        {
+                            User_Input = temp;
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Enter A Valid Number!");
+                        }
+                    }
+                    switch (User_Input)
+                    {
+                        case 1:
+                            currentLevel++;
+                            break;
+                        case 3:
+                            if(currentLevel != 0)
+                            {
+                                currentLevel--;
+                            }
+                            else
+                            {
+                                Console.WriteLine("You Are At The Lowest Level Already.");
+                                IsInFight = false;
+                            }
+                            break;
+                        case 4:
+                            IsInFight = false;
+                            break;
+                        default:
+                            Console.WriteLine("Enter Number 1-4 !!!!!!!");
+                            break;
+                    }
                 }
             }
         }
