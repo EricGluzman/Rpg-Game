@@ -11,16 +11,18 @@ using System.Collections.Specialized;
 using System.Data.SqlTypes;
 using System.Numerics;
 using System.Runtime.Versioning;
+using System.Threading;
+
 
 namespace MyRPG
 {
     class Program
     {
         static int currentLevel = 0;
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("WELCOME TO THE DUNGEON!");
-            Console.WriteLine("Enter Your Character Name: ");
+            await TypeWrite("WELCOME TO THE DUNGEON!");
+            await TypeWrite("Enter Your Character Name: ");
             string username = Console.ReadLine();
     
             Player player = new Player(username);
@@ -28,7 +30,7 @@ namespace MyRPG
             bool IsRunning = true;
             while (IsRunning)
             {
-                Console.WriteLine("\n--- Main Menu ---");
+                await TypeWrite("\n--- Main Menu ---");
                 Console.WriteLine("1. Fight Monster");
                 Console.WriteLine("2. Check Stats");
                 Console.WriteLine("3. Exit Game");
@@ -40,7 +42,7 @@ namespace MyRPG
                         break;
                     }
                     else {
-                        Console.WriteLine("Please Enter A Number 1-3");
+                        ErrorMessage("Please Enter A Number 1-3");
                     }
                 }
                 switch (choice)
@@ -49,29 +51,32 @@ namespace MyRPG
                         StartBattle(player);
                         break;
                     case 2:
-                        ShowStats(player);
+                        await ShowStats(player);
                         break;
                     case 3:
                         IsRunning = false;
                         break;
                     default:
-                        Console.WriteLine("Invalid choice!");
+                        ErrorMessage("Invalid Choice!");
                         break;
                 }
             }
         }
-        static void ShowStats(Player p)
+        static async Task ShowStats(Player p)
         {
-            Console.WriteLine("\n--- PLAYER STATS ---");
-            Console.WriteLine($"Name: {p.Name}");
-            Console.WriteLine($"Health: {p.Health}/{p.MaxHealth}");
-            Console.WriteLine($"Weapon Equipped: {p.EquipedWeapon.Name}");
-            Console.WriteLine($"--- WEAPON STATS --- \nWeapon Min Damage: {p.EquipedWeapon.stats.MinDamage}");
-            Console.WriteLine($"Weapon Max Damage: {p.EquipedWeapon.stats.MaxDamage}");
-            Console.WriteLine($"Weapon Crit Damage: {p.EquipedWeapon.stats.MaxDamage * 1.5}");
-            Console.WriteLine($"Weapon Value: {p.EquipedWeapon.stats.Value}");
+            Console.Clear();
+            await TypeWrite("\n--- PLAYER STATS ---");
+            await TypeWrite($"Name: {p.Name}", 10);
+            await TypeWrite($"Health: {p.Health}/{p.MaxHealth}", 10);
+            await TypeWrite($"Weapon Equipped: {p.EquipedWeapon.Name}", 10);
+            await TypeWrite($"--- WEAPON STATS --- \nWeapon Min Damage: {p.EquipedWeapon.stats.MinDamage}", 10);
+            await TypeWrite($"Weapon Max Damage: {p.EquipedWeapon.stats.MaxDamage}", 10);
+            await TypeWrite($"Weapon Crit Damage: {p.EquipedWeapon.stats.MaxDamage * 1.5}", 10);
+            await TypeWrite($"Weapon Value: {p.EquipedWeapon.stats.Value} \n", 10);
+            Console.Write("Press Enter To Continue. ");
+            Console.ReadLine();
         }
-         static void StartBattle(Player p)
+         static async Task StartBattle(Player p)
         {
             List<Monster> allMonsters = Monster.GetMonsterList();
             if (currentLevel >= allMonsters.Count)
@@ -88,7 +93,8 @@ namespace MyRPG
                 Console.WriteLine($"Monsters Name Is {preset.Name}");
                 int choice = 3;
                 while (true && preset.Health > 0)
-                {
+                {   
+                    Console.Clear();
                     Console.WriteLine("Choose Your Move: \n1.Attack. \n2.Evade \n3.Run The Fight ");
                     if(int.TryParse(Console.ReadLine(), out int temp) && temp >= 1 && temp <= 3)
                     {
@@ -97,7 +103,7 @@ namespace MyRPG
                     }
                     else
                     {
-                        Console.WriteLine("Enter Valid Number Between 1-3. ");
+                       ErrorMessage("Please Enter A Number 1-3");
                     }
                 }
                 switch (choice)
@@ -109,12 +115,12 @@ namespace MyRPG
                         Evade(p);
                         break;
                     case 3:
-                        Console.WriteLine("You Ran Away Your Stats Are: ");
-                        ShowStats(p);
+                        Console.Clear();
+                        Console.WriteLine("You Ran Away.");
                         IsInFight = false;
                         break;
                     default:
-                        Console.WriteLine("Enter A Number Between The Range 1-3");
+                        ErrorMessage("Please Enter A Number 1-3");
                         break;
                 }
                 if(preset.Health > 0 && choice != 3)
@@ -137,7 +143,7 @@ namespace MyRPG
                         }
                         else
                         {
-                            Console.WriteLine("Enter A Valid Number!");
+                            ErrorMessage("Please Enter A Valid Number!");
                         }
                     }
                     switch (User_Input)
@@ -160,7 +166,7 @@ namespace MyRPG
                             IsInFight = false;
                             break;
                         default:
-                            Console.WriteLine("Enter Number 1-4 !!!!!!!");
+                            ErrorMessage("Please Enter A Number 1-4");
                             break;
                     }
                 }
@@ -194,5 +200,21 @@ namespace MyRPG
             p.Health -= damageChange;
             Console.WriteLine($"Now You Have {p.Health} HP Left");
         }
+        static async Task TypeWrite(string message, int speed = 30)
+        {
+            foreach (char c in message)
+            {
+                Console.Write(c);
+                await Task.Delay(speed); 
+            }
+            Console.WriteLine();
+        }      
+        static void ErrorMessage(string s)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(s);
+            Console.ResetColor();
+        } 
     }
 }
