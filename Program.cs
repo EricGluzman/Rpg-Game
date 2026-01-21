@@ -83,15 +83,10 @@ namespace MyRPG
         {
             Console.Clear();
             List<Monster> allMonsters = Monster.GetMonsterList();
-            if (currentLevel >= allMonsters.Count)
-            {
-                Console.WriteLine("CONGRATULATIONS! You defeated the final boss!");
-                return;
-            }
             Monster preset = allMonsters[currentLevel];
             Console.WriteLine($"\n{p.Name} Encounters A Wild Monster!");
             Console.WriteLine($"Monsters Name Is {preset.Name}");
-            
+
             bool IsInFight = true;
             while (IsInFight)
             {   
@@ -107,11 +102,12 @@ namespace MyRPG
 
                 if(currentLevel != 0)
                 {
+                    Console.Clear();
                     await TypeWrite($"You Now Facing A {preset.Name}");
                 }
 
-                int choice = 3;
-                while (true && preset.Health > 0)
+                int choice;
+                while (true)
                 {   
                     Console.WriteLine("Choose Your Move: \n1.Attack. \n2.Evade \n3.Run The Fight ");
                     if(int.TryParse(Console.ReadLine(), out int temp) && temp >= 1 && temp <= 3)
@@ -151,7 +147,7 @@ namespace MyRPG
                     Console.WriteLine("2. Continue To Fight The Same Level Monster");
                     Console.WriteLine("3. Continue To Fight The Previous Level Monster ");
                     Console.WriteLine("4. Go Back To Lobby");
-                    int User_Input = 3;
+                    int User_Input;
                     while (true)
                     {
                         if(int.TryParse(Console.ReadLine(), out int temp))
@@ -168,6 +164,9 @@ namespace MyRPG
                     {
                         case 1:
                             currentLevel++;
+                            break;
+                        case 2:
+                            
                             break;
                         case 3:
                             if(currentLevel != 0)
@@ -198,10 +197,11 @@ namespace MyRPG
             double damage = Math.Round(min + (Random.Shared.NextDouble() * (max - min)), 2);
             await TypeWrite($"{p.Name} Is Attacking And Hitting {damage} Points Of Damage." , 12);
             m.Health -= damage;
+            m.Health = Math.Max(0, m.Health);
             Console.WriteLine($"The Monster Have {m.Health:F2} Left. \n");
             if(m.Health <= 0)
             {
-                Thread.Sleep(2200);
+                Thread.Sleep(1700);
                 Console.Clear();
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"Congratulations You Won {m.Name}!");
