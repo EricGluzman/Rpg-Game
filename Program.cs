@@ -78,6 +78,7 @@ namespace MyRPG
         }
          static async Task StartBattle(Player p)
         {
+            Console.Clear();
             List<Monster> allMonsters = Monster.GetMonsterList();
             if (currentLevel >= allMonsters.Count)
             {
@@ -94,7 +95,6 @@ namespace MyRPG
                 int choice = 3;
                 while (true && preset.Health > 0)
                 {   
-                    Console.Clear();
                     Console.WriteLine("Choose Your Move: \n1.Attack. \n2.Evade \n3.Run The Fight ");
                     if(int.TryParse(Console.ReadLine(), out int temp) && temp >= 1 && temp <= 3)
                     {
@@ -172,12 +172,13 @@ namespace MyRPG
                 }
             }
         }
-        static void Attack(Player p, Monster m)
+        static async Task Attack(Player p, Monster m)
         {   
+            Console.Clear();
             double min = p.EquipedWeapon.stats.MinDamage;
             double max = p.EquipedWeapon.stats.MaxDamage;
             double damage = min + (Random.Shared.NextDouble() * (max - min));
-            Console.WriteLine($"{p.Name} Is Attacking And Hitting {damage} Points Of Damage.");
+            await TypeWrite($"{p.Name} Is Attacking And Hitting {damage} Points Of Damage.");
             m.Health -= damage;
             Console.WriteLine($"The Monster Have {m.Health} Left.");
             if(m.Health <= 0)
@@ -198,7 +199,7 @@ namespace MyRPG
             Console.WriteLine("Now The Monster Attacks!");
             Console.WriteLine($"Monster Dels A Damage! \n-{damageChange}");
             p.Health -= damageChange;
-            Console.WriteLine($"Now You Have {p.Health} HP Left");
+
         }
         static async Task TypeWrite(string message, int speed = 30)
         {
@@ -216,5 +217,27 @@ namespace MyRPG
             Console.WriteLine(s);
             Console.ResetColor();
         } 
+        static void DrawHealthBar(Player p)
+        {
+            RenderBar(p.Health / p.MaxHealth, p.Health, p.MaxHealth);
+        }
+        static void DrawHealthBar(Monster m)
+        {
+            RenderBar(m.Health / m.MaxHealth, m.Health, m.MaxHealth);
+        }
+        static void RenderBar(double pr, double hp, int mxhp)
+        {
+            if (pr > 0.6) Console.ForegroundColor = ConsoleColor.Green;
+            else if (pr > 0.3) Console.ForegroundColor = ConsoleColor.Yellow;
+            else Console.ForegroundColor = ConsoleColor.Red;
+            int sections = 10;
+            for (int i = 0; i < sections; i++)
+            {
+                if (i < pr*10) Console.Write("#");
+                else Console.Write("-");
+            }
+            Console.WriteLine($" {hp}/{mxhp} HP");
+            Console.ResetColor();
+        }
     }
 }
