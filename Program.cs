@@ -113,8 +113,7 @@ namespace MyRPG
                 {
                     Thread.Sleep(500);
                     Console.Clear();
-                    await TypeWrite($"The {preset.Name} Is Still Alive");
-                    Thread.Sleep(300);
+                    Console.WriteLine($"The {preset.Name} Is Still Alive");
                 }
 
                 int choice;
@@ -186,6 +185,11 @@ namespace MyRPG
                                 currentLevel--;
                                 preset = allMonsters[currentLevel];
                             }
+                            else
+                            {
+                                Console.WriteLine("You Are At The Lowest Level Already.");
+                                IsInFight = false;
+                            }
                             continue;
                         case 4:
                             IsInFight = false;
@@ -237,7 +241,7 @@ namespace MyRPG
             double min = m.Damage * 0.8;
             double max = m.Damage * 1.2;
             double damageChange = Math.Round(min + (Random.Shared.NextDouble() * (max - min)), 2);
-            if(CritHitChance <= 5)
+            if(CritHitChance <= 100)
             {
                 Thread.Sleep(150);
                 damageChange *= 1.5;
