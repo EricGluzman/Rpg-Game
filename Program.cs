@@ -48,13 +48,16 @@ namespace MyRPG
                 switch (choice)
                 {
                     case 1:
-                        StartBattle(player);
+                        await StartBattle(player);
                         break;
                     case 2:
                         await ShowStats(player);
                         break;
                     case 3:
                         IsRunning = false;
+                        break;
+                    case 1591:
+                        player.EquipedWeapon = new Weapon("Admin Sword", 3000000, 1000000, 100, 100000);
                         break;
                     default:
                         ErrorMessage("Invalid Choice!");
@@ -85,13 +88,28 @@ namespace MyRPG
                 Console.WriteLine("CONGRATULATIONS! You defeated the final boss!");
                 return;
             }
+            Monster preset = allMonsters[currentLevel];
+            Console.WriteLine($"\n{p.Name} Encounters A Wild Monster!");
+            Console.WriteLine($"Monsters Name Is {preset.Name}");
             
             bool IsInFight = true;
             while (IsInFight)
             {   
-                Monster preset = allMonsters[currentLevel];
-                Console.WriteLine($"\n{p.Name} Encounters A Wild Monster!");
-                Console.WriteLine($"Monsters Name Is {preset.Name}");
+                if (currentLevel >= allMonsters.Count)
+                {
+                    Console.WriteLine("CONGRATULATIONS! You defeated the final boss!");
+                    return;
+                }
+                else
+                {
+                    preset = allMonsters[currentLevel];
+                }
+
+                if(currentLevel != 0)
+                {
+                    await TypeWrite($"You Now Facing A {preset.Name}");
+                }
+
                 int choice = 3;
                 while (true && preset.Health > 0)
                 {   
@@ -109,7 +127,7 @@ namespace MyRPG
                 switch (choice)
                 {
                     case 1:
-                        Attack(p, preset);
+                        await Attack(p, preset);
                         break;
                     case 2:
                         Evade(p);
@@ -177,14 +195,19 @@ namespace MyRPG
             Console.Clear();
             double min = p.EquipedWeapon.stats.MinDamage;
             double max = p.EquipedWeapon.stats.MaxDamage;
-            double damage = min + (Random.Shared.NextDouble() * (max - min));
-            await TypeWrite($"{p.Name} Is Attacking And Hitting {damage} Points Of Damage.");
+            double damage = Math.Round(min + (Random.Shared.NextDouble() * (max - min)), 2);
+            await TypeWrite($"{p.Name} Is Attacking And Hitting {damage} Points Of Damage." , 12);
             m.Health -= damage;
-            Console.WriteLine($"The Monster Have {m.Health} Left.");
+            Console.WriteLine($"The Monster Have {m.Health:F2} Left. \n");
             if(m.Health <= 0)
             {
+                Thread.Sleep(2200);
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"Congratulations You Won {m.Name}!");
+                Console.ResetColor();
             }
+            Thread.Sleep(500);
         }
 
         static void Evade(Player p)
@@ -195,11 +218,13 @@ namespace MyRPG
         {   
             double min = m.Damage * 0.8;
             double max = m.Damage * 1.2;
-            double damageChange = min + (Random.Shared.NextDouble() * (max - min));
+            double damageChange = Math.Round(min + (Random.Shared.NextDouble() * (max - min)), 2);
             Console.WriteLine("Now The Monster Attacks!");
-            Console.WriteLine($"Monster Dels A Damage! \n-{damageChange}");
+            Console.WriteLine($"Monster Dels A Damage! \n-{damageChange}\n");
             p.Health -= damageChange;
-
+            Console.Write("Players Health: ");
+            DrawHealthBar(p);
+            Console.WriteLine();
         }
         static async Task TypeWrite(string message, int speed = 30)
         {
@@ -236,7 +261,7 @@ namespace MyRPG
                 if (i < pr*10) Console.Write("#");
                 else Console.Write("-");
             }
-            Console.WriteLine($" {hp}/{mxhp} HP");
+            Console.WriteLine($" {hp:F2}/{mxhp} HP");
             Console.ResetColor();
         }
     }
