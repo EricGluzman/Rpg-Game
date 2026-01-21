@@ -79,14 +79,13 @@ namespace MyRPG
                 Console.WriteLine("CONGRATULATIONS! You defeated the final boss!");
                 return;
             }
-            Monster preset = allMonsters[currentLevel];
-
-            Console.WriteLine($"\n{p.Name} Encounters A Wild Monster!");
-            Console.WriteLine($"Monsters Name Is {preset.Name}");
-
+            
             bool IsInFight = true;
             while (IsInFight)
             {   
+                Monster preset = allMonsters[currentLevel];
+                Console.WriteLine($"\n{p.Name} Encounters A Wild Monster!");
+                Console.WriteLine($"Monsters Name Is {preset.Name}");
                 int choice = 3;
                 while (true && preset.Health > 0)
                 {
