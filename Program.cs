@@ -86,8 +86,10 @@ namespace MyRPG
             Monster preset = allMonsters[currentLevel];
             Console.WriteLine($"\n{p.Name} Encounters A Wild Monster!");
             Console.WriteLine($"Monsters Name Is {preset.Name}");
+            Thread.Sleep(1700);
 
             bool IsInFight = true;
+            bool showTheMessage = false;
             while (IsInFight)
             {   
                 if (currentLevel >= allMonsters.Count)
@@ -100,10 +102,19 @@ namespace MyRPG
                     preset = allMonsters[currentLevel];
                 }
 
-                if(currentLevel != 0)
+                if(currentLevel != 0 && showTheMessage)
                 {
                     Console.Clear();
                     await TypeWrite($"You Now Facing A {preset.Name}");
+                    showTheMessage = false;
+                    Thread.Sleep(500);
+                }
+                else if(showTheMessage == false)
+                {
+                    Thread.Sleep(500);
+                    Console.Clear();
+                    await TypeWrite($"The {preset.Name} Is Still Alive");
+                    Thread.Sleep(300);
                 }
 
                 int choice;
@@ -164,21 +175,18 @@ namespace MyRPG
                     {
                         case 1:
                             currentLevel++;
-                            break;
+                            preset = allMonsters[currentLevel]; 
+                            showTheMessage = true;
+                            continue; 
                         case 2:
-                            
-                            break;
+                            preset.Health = preset.MaxHealth; 
+                            continue;
                         case 3:
-                            if(currentLevel != 0)
-                            {
+                            if(currentLevel != 0) {
                                 currentLevel--;
+                                preset = allMonsters[currentLevel];
                             }
-                            else
-                            {
-                                Console.WriteLine("You Are At The Lowest Level Already.");
-                                IsInFight = false;
-                            }
-                            break;
+                            continue;
                         case 4:
                             IsInFight = false;
                             break;
@@ -186,16 +194,25 @@ namespace MyRPG
                             ErrorMessage("Please Enter A Number 1-4");
                             break;
                     }
+                    
                 }
             }
         }
         static async Task Attack(Player p, Monster m)
         {   
+            int CritCalculation = Random.Shared.Next(1,101);
             Console.Clear();
             double min = p.EquipedWeapon.stats.MinDamage;
             double max = p.EquipedWeapon.stats.MaxDamage;
             double damage = Math.Round(min + (Random.Shared.NextDouble() * (max - min)), 2);
-            await TypeWrite($"{p.Name} Is Attacking And Hitting {damage} Points Of Damage." , 12);
+            if(CritCalculation <= p.EquipedWeapon.stats.CritHitChance)
+            {
+              damage *= 1.5;
+              Console.ForegroundColor = ConsoleColor.DarkCyan;
+              await TypeWrite("Crit Damage!!", 100);
+              Console.ResetColor();
+            }  
+            await TypeWrite($"{p.Name} Is Attacking And Hitting {damage:F2} Points Of Damage." , 12);
             m.Health -= damage;
             m.Health = Math.Max(0, m.Health);
             Console.WriteLine($"The Monster Have {m.Health:F2} Left. \n");
@@ -214,17 +231,27 @@ namespace MyRPG
         {
             Console.WriteLine("In near future");
         }
-        static void MonsterAttack(Player p, Monster m)
+        static async Task MonsterAttack(Player p, Monster m)
         {   
+            int CritHitChance = Random.Shared.Next(1,101);
             double min = m.Damage * 0.8;
             double max = m.Damage * 1.2;
             double damageChange = Math.Round(min + (Random.Shared.NextDouble() * (max - min)), 2);
-            Console.WriteLine("Now The Monster Attacks!");
-            Console.WriteLine($"Monster Dels A Damage! \n-{damageChange}\n");
+            if(CritHitChance <= 5)
+            {
+                Thread.Sleep(150);
+                damageChange *= 1.5;
+                Console.ForegroundColor = ConsoleColor.Red;
+                await TypeWrite("THE MONSTER GIVES A CRIT!", 80);
+                Console.ResetColor();
+            }
+            else Console.WriteLine("Now The Monster Attacks!"); 
+            Console.WriteLine($"Monster Deals A Damage! \n-{damageChange}\n");
             p.Health -= damageChange;
             Console.Write("Players Health: ");
             DrawHealthBar(p);
             Console.WriteLine();
+            Thread.Sleep(500);
         }
         static async Task TypeWrite(string message, int speed = 30)
         {
