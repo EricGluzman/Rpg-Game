@@ -71,6 +71,7 @@ namespace MyRPG
             await TypeWrite("\n--- PLAYER STATS ---");
             await TypeWrite($"Name: {p.Name}", 10);
             await TypeWrite($"Health: {p.Health}/{p.MaxHealth}", 10);
+            await TypeWrite($"Exp: {p.Exp}");
             await TypeWrite($"Weapon Equipped: {p.EquipedWeapon.Name}", 10);
             await TypeWrite($"--- WEAPON STATS --- \nWeapon Min Damage: {p.EquipedWeapon.stats.MinDamage}", 10);
             await TypeWrite($"Weapon Max Damage: {p.EquipedWeapon.stats.MaxDamage}", 10);
@@ -86,7 +87,7 @@ namespace MyRPG
             Monster preset = allMonsters[currentLevel];
             Console.WriteLine($"\n{p.Name} Encounters A Wild Monster!");
             Console.WriteLine($"Monsters Name Is {preset.Name}");
-            Thread.Sleep(1700);
+            Thread.Sleep(1300);
 
             bool IsInFight = true;
             bool showTheMessage = false;
@@ -149,10 +150,12 @@ namespace MyRPG
                 }
                 if(preset.Health > 0 && choice != 3)
                 {
-                    MonsterAttack(p, preset);
+                    await MonsterAttack(p, preset);
                 }
                 else if(preset.Health <= 0)
                 {
+                    Exp(p,preset);
+                    Console.ReadLine();
                     Console.WriteLine("Do You Want To: \n1. Continue To Fight Next Level Monster");
                     Console.WriteLine("2. Continue To Fight The Same Level Monster");
                     Console.WriteLine("3. Continue To Fight The Previous Level Monster ");
@@ -250,12 +253,15 @@ namespace MyRPG
                 Console.ResetColor();
             }
             else Console.WriteLine("Now The Monster Attacks!"); 
-            Console.WriteLine($"Monster Deals A Damage! \n-{damageChange}\n");
+            Console.WriteLine($"Monster Deals A Damage! \n-{damageChange:F2}\n");
             p.Health -= damageChange;
             Console.Write("Players Health: ");
             DrawHealthBar(p);
             Console.WriteLine();
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
+            Exp(p,m);
+            Console.Write("Press Enter To Continue: ");
+            Console.ReadLine();
         }
         static async Task TypeWrite(string message, int speed = 30)
         {
@@ -294,6 +300,15 @@ namespace MyRPG
             }
             Console.WriteLine($" {hp:F2}/{mxhp} HP");
             Console.ResetColor();
+        }
+
+        static void Exp(Player p, Monster m)
+        {
+            double theGivenExp = Math.Round(m.ExpGivenMin + (Random.Shared.NextDouble() * (m.ExpGivenMax - m. ExpGivenMin)),2);
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine($"You Recived {theGivenExp} Exp From The Monster. ");
+            Console.ResetColor();
+            p.Exp += theGivenExp;
         }
     }
 }
