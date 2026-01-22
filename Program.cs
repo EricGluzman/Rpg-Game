@@ -30,10 +30,12 @@ namespace MyRPG
             bool IsRunning = true;
             while (IsRunning)
             {
+                Console.Clear();
                 await TypeWrite("\n--- Main Menu ---");
                 Console.WriteLine("1. Fight Monster");
                 Console.WriteLine("2. Check Stats");
-                Console.WriteLine("3. Exit Game");
+                Console.WriteLine("3. Point Investment");
+                Console.WriteLine("4. Exit Game");
                 int choice;
                 while (true)
                 {
@@ -54,6 +56,9 @@ namespace MyRPG
                         await ShowStats(player);
                         break;
                     case 3:
+                        LevelUpSystem(player);
+                        break;
+                    case 4:
                         IsRunning = false;
                         break;
                     case 1591:
@@ -70,13 +75,14 @@ namespace MyRPG
             Console.Clear();
             await TypeWrite("\n--- PLAYER STATS ---");
             await TypeWrite($"Name: {p.Name}", 10);
-            await TypeWrite($"Health: {p.Health}/{p.MaxHealth}", 10);
-            await TypeWrite($"Exp: {p.Exp}");
+            await TypeWrite($"Health: {p.Health:F2}/{p.MaxHealth:F2}", 10);
+            await TypeWrite($"Exp: {p.Exp:F2}");
             await TypeWrite($"Weapon Equipped: {p.EquipedWeapon.Name}", 10);
-            await TypeWrite($"--- WEAPON STATS --- \nWeapon Min Damage: {p.EquipedWeapon.stats.MinDamage}", 10);
-            await TypeWrite($"Weapon Max Damage: {p.EquipedWeapon.stats.MaxDamage}", 10);
-            await TypeWrite($"Weapon Crit Damage: {p.EquipedWeapon.stats.MaxDamage * 1.5}", 10);
-            await TypeWrite($"Weapon Value: {p.EquipedWeapon.stats.Value} \n", 10);
+            await TypeWrite($"--- WEAPON STATS --- \nWeapon Min Damage: {p.EquipedWeapon.stats.MinDamage:F2}", 10);
+            await TypeWrite($"Weapon Max Damage: {p.EquipedWeapon.stats.MaxDamage:F2}", 10);
+            double temp = p.EquipedWeapon.stats.MaxDamage * 1.5;
+            await TypeWrite($"Weapon Crit Damage: {temp:F2}", 10);
+            await TypeWrite($"Weapon Value: {p.EquipedWeapon.stats.Value:F2} \n", 10);
             Console.Write("Press Enter To Continue. ");
             Console.ReadLine();
         }
@@ -287,7 +293,7 @@ namespace MyRPG
         {
             RenderBar(m.Health / m.MaxHealth, m.Health, m.MaxHealth);
         }
-        static void RenderBar(double pr, double hp, int mxhp)
+        static void RenderBar(double pr, double hp, double mxhp)
         {
             if (pr > 0.6) Console.ForegroundColor = ConsoleColor.Green;
             else if (pr > 0.3) Console.ForegroundColor = ConsoleColor.Yellow;
@@ -309,6 +315,68 @@ namespace MyRPG
             Console.WriteLine($"You Recived {theGivenExp} Exp From The Monster. ");
             Console.ResetColor();
             p.Exp += theGivenExp;
+        }
+
+        static void LevelUpSystem(Player p){
+            bool Running = true;
+           while (Running)
+           {
+             int players_chooice;
+             Console.Clear();
+             Console.WriteLine($"You Have {p.UpgradePoints} Upgrade Points Left To Use.");
+             Console.WriteLine("Choose Where To Invest: ");
+             Console.WriteLine("1. Damage: Multiply By 1.1 The Given Damage.");
+             Console.WriteLine("2. Health: Multiply By 1.1 The Max Health.");
+             Console.WriteLine("3. Crit Chance: +1 To The WEAPON Crit Chance.");
+             Console.WriteLine("4. Back To Main Menu.");
+             while (true)
+             {
+                 if(int.TryParse(Console.ReadLine(), out int temp))
+                 {
+                     players_chooice = temp;
+                     break;
+                 }
+                 else
+                 {
+                     ErrorMessage("Enter A Valid Input!");
+                 }
+             }
+             if(p.UpgradePoints <= 0)
+                {
+                    ErrorMessage("No Points Left To Invest. ");
+                    Thread.Sleep(1230);
+                    break;
+                }
+             switch (players_chooice)
+             {
+                 case 1:
+                     p.EquipedWeapon.stats.MaxDamage *= 1.1;
+                     p.EquipedWeapon.stats.MinDamage *= 1.1;
+                     Console.WriteLine($"The Weapon Now Deals {p.EquipedWeapon.stats.MaxDamage:F2} Of Max Damage.");
+                     p.UpgradePoints -= 1;
+                     Thread.Sleep(1250);
+                     break;
+                 case 2:
+                     p.MaxHealth *= 1.1;
+                     Console.WriteLine($"Your Max Health Is Now {p.MaxHealth:F0}");
+                     p.UpgradePoints -= 1;
+                     Thread.Sleep(1250);
+                     break;
+                 case 3:
+                     p.EquipedWeapon.stats.CritHitChance += 1;
+                     Console.WriteLine($"Your Weapon Crit Chance Now Is {p.EquipedWeapon.stats.CritHitChance:F0}");
+                     p.UpgradePoints -= 1;
+                     Thread.Sleep(1250);
+                     break;
+                 case 4:
+                     Running = false;
+                     break;
+                 default:
+                     ErrorMessage("Enter A Number 1-3");
+                     Thread.Sleep(1700);
+                     break;
+             }
+           }
         }
     }
 }
