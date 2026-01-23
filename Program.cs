@@ -35,7 +35,8 @@ namespace MyRPG
                 Console.WriteLine("1. Fight Monster");
                 Console.WriteLine("2. Check Stats");
                 Console.WriteLine("3. Point Investment");
-                Console.WriteLine("4. Exit Game");
+                Console.WriteLine("4. Inventory");
+                Console.WriteLine("5. Exit Game");
                 int choice;
                 while (true)
                 {
@@ -59,6 +60,11 @@ namespace MyRPG
                         LevelUpSystem(player);
                         break;
                     case 4:
+                        await Inventory(player, false);
+                        break;
+                    case 5:
+                        Console.Clear();
+                        Console.WriteLine("See Ya Soon.");
                         IsRunning = false;
                         break;
                     case 1591:
@@ -88,6 +94,7 @@ namespace MyRPG
         }
          static async Task StartBattle(Player p)
         {
+            bool evaded = false;
             Console.Clear();
             List<Monster> allMonsters = Monster.GetMonsterList();
             Monster preset = allMonsters[currentLevel];
@@ -143,7 +150,7 @@ namespace MyRPG
                         await Attack(p, preset);
                         break;
                     case 2:
-                        Evade(p);
+                        evaded = await Evade(p,evaded);
                         break;
                     case 3:
                         Console.Clear();
@@ -154,13 +161,14 @@ namespace MyRPG
                         ErrorMessage("Please Enter A Number 1-3");
                         break;
                 }
-                if(preset.Health > 0 && choice != 3)
+                if(preset.Health > 0 && choice != 3 || preset.Health > 0 && evaded)
                 {
                     await MonsterAttack(p, preset);
                 }
                 else if(preset.Health <= 0)
                 {
                     Exp(p,preset);
+                    Console.WriteLine("Press Enter To Continue: ");
                     Console.ReadLine();
                     Console.WriteLine("Do You Want To: \n1. Continue To Fight Next Level Monster");
                     Console.WriteLine("2. Continue To Fight The Same Level Monster");
@@ -240,9 +248,73 @@ namespace MyRPG
             Thread.Sleep(500);
         }
 
-        static void Evade(Player p)
+        static async Task<bool> Evade(Player p , bool evaded)
         {
-            Console.WriteLine("In near future");
+            int Evaded = Random.Shared.Next(1,101);
+            if(Evaded <= p.EvadeChance) evaded = true;
+            if (evaded) await TypeWrite("You Evaded Successfully!");
+            else await TypeWrite("You Evaded Unsuccessfully!");
+            Thread.Sleep(1200);
+            await Inventory(p,true);
+            Thread.Sleep(500);
+            await TypeWrite("You Want To Choose 1. Weapon 2. Potion");
+            int players_chooice;
+           while (true)
+           {
+             if(int.TryParse(Console.ReadLine(), out int temp))
+             {
+                 players_chooice = temp;
+                 break;
+             }
+             else ErrorMessage("Enter A Valid Input");
+           }
+            switch (players_chooice)
+            {
+                case 1:
+                    int chooice;
+                      while (true)
+                        {
+                            await TypeWrite($"Chooice A Weapon 1-{p.user_Inventory.Weapons.Count()}");
+                            if(int.TryParse(Console.ReadLine(), out int temp) && temp >= 1 && temp <= p.user_Inventory.Weapons.Count()) 
+                            {
+                                chooice = temp;
+                                break;
+                            }
+                            else ErrorMessage("Enter A Valid Input");
+                        }
+                    p.EquipedWeapon = p.user_Inventory.Weapons[chooice-1];
+                    await TypeWrite($"Weapon Equiped: {p.EquipedWeapon.Name}");
+                    Console.Write("Press Enter To Continue: ");
+                    Console.ReadLine();
+                    break;
+                case 2:
+                    int cchooice;
+                      while (true)
+                        {
+                            await TypeWrite($"Chooice A Potion 1-{p.user_Inventory.Potions.Count()}");
+                            if(int.TryParse(Console.ReadLine(), out int temp) && temp >= 1 && temp <= p.user_Inventory.Potions.Count()) 
+                            {
+                                cchooice = temp;
+                                break;
+                            }
+                            else ErrorMessage("Enter A Valid Input");
+                        }
+                    var user_potion = p.user_Inventory.Potions[cchooice-1];
+                    if(user_potion.Name.Contains("Health")) p.Health += user_potion.stats.Health;
+                    else if(user_potion.Name.Contains("Damage")) {
+                        p.EquipedWeapon.stats.MaxDamage *= user_potion.stats.Damage;
+                        p.EquipedWeapon.stats.MinDamage *= user_potion.stats.Damage;
+                    }
+                    else if(user_potion.Name.Contains("Crit")) p.EquipedWeapon.stats.CritHitChance *= user_potion.stats.CritChance;
+                    await TypeWrite($"Potion Used: {user_potion.Name}");
+                    Console.Write("Press Enter To Continue: ");
+                    Console.ReadLine();
+                    break;
+                default:
+                    break;
+            }
+            return evaded;
+          
         }
         static async Task MonsterAttack(Player p, Monster m)
         {   
@@ -250,7 +322,7 @@ namespace MyRPG
             double min = m.Damage * 0.8;
             double max = m.Damage * 1.2;
             double damageChange = Math.Round(min + (Random.Shared.NextDouble() * (max - min)), 2);
-            if(CritHitChance <= 100)
+            if(CritHitChance <= 5)
             {
                 Thread.Sleep(150);
                 damageChange *= 1.5;
@@ -264,8 +336,6 @@ namespace MyRPG
             Console.Write("Players Health: ");
             DrawHealthBar(p);
             Console.WriteLine();
-            Thread.Sleep(1000);
-            Exp(p,m);
             Console.Write("Press Enter To Continue: ");
             Console.ReadLine();
         }
@@ -341,7 +411,7 @@ namespace MyRPG
                      ErrorMessage("Enter A Valid Input!");
                  }
              }
-             if(p.UpgradePoints <= 0)
+             if(p.UpgradePoints <= 0 && players_chooice != 4)
                 {
                     ErrorMessage("No Points Left To Invest. ");
                     Thread.Sleep(1230);
@@ -377,6 +447,35 @@ namespace MyRPG
                      break;
              }
            }
+        }
+        static async Task Inventory(Player p, bool b)
+        {
+            Console.Clear();
+            await TypeWrite(" --- INVENTORY --- \n");
+            Console.WriteLine("  --- Weapons --- ");
+            for(int i = 0; i < p.user_Inventory.Weapons.Count(); i++)
+            {
+                Console.Write($"{i+1}. {p.user_Inventory.Weapons[i].Name} ");
+                if(i % 5 == 0 && i != 0)
+                {
+                    Console.WriteLine();
+                }
+            }
+            Console.WriteLine("\n  --- Potions --- ");
+            for(int i = 0; i < p.user_Inventory.Potions.Count(); i++)
+            {
+                Console.Write($"{i+1}. {p.user_Inventory.Potions[i].Name} ");
+                if(i % 5 == 0 && i != 0)
+                {
+                    Console.WriteLine();
+                }
+            }
+            Console.WriteLine();
+            if (!b)
+            {
+               Console.Write("Press Enter To Continue: ");
+               Console.ReadLine(); 
+            }
         }
     }
 }
