@@ -10,7 +10,7 @@ namespace character
         public double Health;
         public double MaxHealth;
         public double Exp;
-        public int ExpCap;
+        public double ExpCap;
         public int Level;
         public int UpgradePoints;
         public Weapon EquipedWeapon;
@@ -23,7 +23,7 @@ namespace character
             Health = 100;
             MaxHealth = 100;
             Exp = 0;
-            ExpCap = 150;
+            ExpCap = 200;
             Level = 1;
             UpgradePoints = 1;
             EvadeChance = 15;

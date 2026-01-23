@@ -31,6 +31,7 @@ namespace MyRPG
             while (IsRunning)
             {
                 Console.Clear();
+                await newLevelCheck(player);
                 await TypeWrite("\n--- Main Menu ---");
                 Console.WriteLine("1. Fight Monster");
                 Console.WriteLine("2. Check Stats");
@@ -68,7 +69,7 @@ namespace MyRPG
                         IsRunning = false;
                         break;
                     case 1591:
-                        player.EquipedWeapon = new Weapon("Admin Sword", 3000000, 1000000, 100, 100000);
+                        player.user_Inventory.Weapons.Add(new Weapon("Admin Sword", 3000000, 1000000, 100, 100000));
                         break;
                     default:
                         ErrorMessage("Invalid Choice!");
@@ -82,12 +83,14 @@ namespace MyRPG
             await TypeWrite("\n--- PLAYER STATS ---");
             await TypeWrite($"Name: {p.Name}", 10);
             await TypeWrite($"Health: {p.Health:F2}/{p.MaxHealth:F2}", 10);
-            await TypeWrite($"Exp: {p.Exp:F2}");
+            await TypeWrite($"Exp: {p.Exp:F2}/{p.ExpCap:F2}");
+            await TypeWrite($"Level: {p.Level}");
             await TypeWrite($"Weapon Equipped: {p.EquipedWeapon.Name}", 10);
             await TypeWrite($"--- WEAPON STATS --- \nWeapon Min Damage: {p.EquipedWeapon.stats.MinDamage:F2}", 10);
             await TypeWrite($"Weapon Max Damage: {p.EquipedWeapon.stats.MaxDamage:F2}", 10);
             double temp = p.EquipedWeapon.stats.MaxDamage * 1.5;
             await TypeWrite($"Weapon Crit Damage: {temp:F2}", 10);
+            await TypeWrite($"Weapon Crit Chance: {p.EquipedWeapon.stats.CritHitChance:F0}%", 10);
             await TypeWrite($"Weapon Value: {p.EquipedWeapon.stats.Value:F2} \n", 10);
             Console.Write("Press Enter To Continue. ");
             Console.ReadLine();
@@ -106,6 +109,15 @@ namespace MyRPG
             bool showTheMessage = false;
             while (IsInFight)
             {   
+                if(p.Health <= 0)
+                {
+                    ErrorMessage("You Have lost.");
+                    Thread.Sleep(1500);
+                    p.Exp -= p.Exp * 0.5;
+                    p.Health = p.MaxHealth;
+                    IsInFight = false;
+                    return;
+                }
                 if (currentLevel >= allMonsters.Count)
                 {
                     Console.WriteLine("CONGRATULATIONS! You defeated the final boss!");
@@ -190,9 +202,13 @@ namespace MyRPG
                     switch (User_Input)
                     {
                         case 1:
-                            currentLevel++;
-                            preset = allMonsters[currentLevel]; 
-                            showTheMessage = true;
+                            if(currentLevel != allMonsters.Count()-1)
+                            {
+                                currentLevel++;
+                                preset = allMonsters[currentLevel]; 
+                                showTheMessage = true;
+                            }
+                            else Console.WriteLine("No Monster`s Left To Fight."); preset.Health = preset.MaxHealth; Thread.Sleep(1000);
                             continue; 
                         case 2:
                             preset.Health = preset.MaxHealth; 
@@ -256,65 +272,8 @@ namespace MyRPG
             else await TypeWrite("You Evaded Unsuccessfully!");
             Thread.Sleep(1200);
             await Inventory(p,true);
-            Thread.Sleep(500);
-            await TypeWrite("You Want To Choose 1. Weapon 2. Potion");
-            int players_chooice;
-           while (true)
-           {
-             if(int.TryParse(Console.ReadLine(), out int temp))
-             {
-                 players_chooice = temp;
-                 break;
-             }
-             else ErrorMessage("Enter A Valid Input");
-           }
-            switch (players_chooice)
-            {
-                case 1:
-                    int chooice;
-                      while (true)
-                        {
-                            await TypeWrite($"Chooice A Weapon 1-{p.user_Inventory.Weapons.Count()}");
-                            if(int.TryParse(Console.ReadLine(), out int temp) && temp >= 1 && temp <= p.user_Inventory.Weapons.Count()) 
-                            {
-                                chooice = temp;
-                                break;
-                            }
-                            else ErrorMessage("Enter A Valid Input");
-                        }
-                    p.EquipedWeapon = p.user_Inventory.Weapons[chooice-1];
-                    await TypeWrite($"Weapon Equiped: {p.EquipedWeapon.Name}");
-                    Console.Write("Press Enter To Continue: ");
-                    Console.ReadLine();
-                    break;
-                case 2:
-                    int cchooice;
-                      while (true)
-                        {
-                            await TypeWrite($"Chooice A Potion 1-{p.user_Inventory.Potions.Count()}");
-                            if(int.TryParse(Console.ReadLine(), out int temp) && temp >= 1 && temp <= p.user_Inventory.Potions.Count()) 
-                            {
-                                cchooice = temp;
-                                break;
-                            }
-                            else ErrorMessage("Enter A Valid Input");
-                        }
-                    var user_potion = p.user_Inventory.Potions[cchooice-1];
-                    if(user_potion.Name.Contains("Health")) p.Health += user_potion.stats.Health;
-                    else if(user_potion.Name.Contains("Damage")) {
-                        p.EquipedWeapon.stats.MaxDamage *= user_potion.stats.Damage;
-                        p.EquipedWeapon.stats.MinDamage *= user_potion.stats.Damage;
-                    }
-                    else if(user_potion.Name.Contains("Crit")) p.EquipedWeapon.stats.CritHitChance *= user_potion.stats.CritChance;
-                    await TypeWrite($"Potion Used: {user_potion.Name}");
-                    Console.Write("Press Enter To Continue: ");
-                    Console.ReadLine();
-                    break;
-                default:
-                    break;
-            }
+            Console.Clear();
             return evaded;
-          
         }
         static async Task MonsterAttack(Player p, Monster m)
         {   
@@ -450,6 +409,7 @@ namespace MyRPG
         }
         static async Task Inventory(Player p, bool b)
         {
+            bool isRunning = true;
             Console.Clear();
             await TypeWrite(" --- INVENTORY --- \n");
             Console.WriteLine("  --- Weapons --- ");
@@ -471,11 +431,96 @@ namespace MyRPG
                 }
             }
             Console.WriteLine();
-            if (!b)
+             Thread.Sleep(200);
+            while (isRunning)
             {
-               Console.Write("Press Enter To Continue: ");
-               Console.ReadLine(); 
+                await TypeWrite("You Want To Choose 1. Weapon 2. Potion 3. Back");
+                int players_chooice;
+               while (true)
+               {
+                 if(int.TryParse(Console.ReadLine(), out int temp))
+                 {
+                     players_chooice = temp;
+                     break;
+                 }
+                 else ErrorMessage("Enter A Valid Input");
+               }
+                switch (players_chooice)
+                {
+                    case 1:
+                        int chooice;
+                          while (true)
+                            {
+                                await TypeWrite($"Chooice A Weapon 1-{p.user_Inventory.Weapons.Count()}");
+                                if(int.TryParse(Console.ReadLine(), out int temp) && temp >= 1 && temp <= p.user_Inventory.Weapons.Count()) 
+                                {
+                                    chooice = temp;
+                                    break;
+                                }
+                                else ErrorMessage("Enter A Valid Input");
+                            }
+                        p.EquipedWeapon = p.user_Inventory.Weapons[chooice-1];
+                        await TypeWrite($"Weapon Equiped: {p.EquipedWeapon.Name}");
+                        Console.Write("Press Enter To Continue: ");
+                        Console.ReadLine();
+                        break;
+                    case 2:
+                        int cchooice;
+                          while (true)
+                            {
+                                await TypeWrite($"Chooice A Potion 1-{p.user_Inventory.Potions.Count()}");
+                                if(int.TryParse(Console.ReadLine(), out int temp)) 
+                                {
+                                    cchooice = temp;
+                                    break;
+                                }
+                                else ErrorMessage("Enter A Valid Input");
+                            }
+                       if (p.user_Inventory.Potions.Count() != 0)
+                       {
+                         var user_potion = p.user_Inventory.Potions[cchooice-1];
+                         if (user_potion.Name.Contains("Health"))
+                         {
+                             p.Health += user_potion.stats.Health; 
+                             p.user_Inventory.Potions.RemoveAt(cchooice-1);
+                         } 
+                         else if(user_potion.Name.Contains("Damage")) {
+                             p.EquipedWeapon.stats.MaxDamage *= user_potion.stats.Damage;
+                             p.EquipedWeapon.stats.MinDamage *= user_potion.stats.Damage;
+                             p.user_Inventory.Potions.RemoveAt(cchooice-1);
+                         }
+                         else if(user_potion.Name.Contains("Crit")) {
+                             p.EquipedWeapon.stats.CritHitChance *= user_potion.stats.CritChance;
+                             p.user_Inventory.Potions.RemoveAt(cchooice-1);
+                         }
+                        
+                         await TypeWrite($"Potion Used: {user_potion.Name}");
+                         Console.Write("Press Enter To Continue: ");
+                         Console.ReadLine();
+                       }
+                        else ErrorMessage("No Potions Left To Use.");
+                        break;
+                    case 3:
+                        isRunning = false;
+                        break;
+                    default:
+                        ErrorMessage("Enter A Valid Input.");
+                        break;
+                }
             }
+        }
+        static async Task newLevelCheck(Player p)
+        {
+           while (p.Exp >= p.ExpCap)
+           {
+                p.Exp -= p.ExpCap;
+                p.ExpCap *= 1.5;
+                p.Level++;
+                p.UpgradePoints++;
+                await TypeWrite($"Congradulation You`ve Reached New Level {p.Level}");
+                await TypeWrite($"You Now Have {p.UpgradePoints} Upgrade Points.");
+                Thread.Sleep(800);
+           }
         }
     }
 }
